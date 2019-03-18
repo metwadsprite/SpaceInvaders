@@ -104,21 +104,21 @@ private:
 	POINT					m_OldCursorPos;		// Old cursor position for tracking
 	HINSTANCE				m_hInstance;
 
-	CImageFile				m_imgBackground;
+	CImageFile				m_imgBackground;	// Background image
 
 	BackBuffer*				_Buffer;
-	CPlayer*				_Player1;
-	CPlayer*				_Player2;
+	CPlayer*				_Player1;			// Player one
+	CPlayer*				_Player2;			// Player two
 
-	std::list<Sprite*>		_bullets;
-	std::list<Sprite*>		_stars;
-	std::list<CPlayer*>		_enemies;
+	std::list<Sprite*>		_bullets;			// List containing all bullets on the screen
+	std::list<Sprite*>		_stars;				// List containing stars scrolling in the background
+	std::list<CPlayer*>		_enemies;			// List containing all enemies alive
 
-	Vec2					_screenSize;
+	Vec2					_screenSize;		// Provides easy access to the screen size
 
-	GameState				_gameState;
-	Sprite*					_wonSprite;
-	Sprite*					_lostSprite;
+	GameState				_gameState;			// Game state (ongoing, won, lost)
+	Sprite*					_wonSprite;			// Information to be displayed when game is won
+	Sprite*					_lostSprite;		// Information to be displayed when game is lost
 };
 
 #endif // _CGAMEAPP_H_

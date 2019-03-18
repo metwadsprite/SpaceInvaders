@@ -335,9 +335,7 @@ void CGameApp::SetupGameState()
 	_Player1->Position() = Vec2(int(_screenSize.x / 3 * 1), int(_screenSize.y / 3 * 2));
 	_Player2->Position() = Vec2(int(_screenSize.x / 3 * 2), int(_screenSize.y / 3 * 2));
 	_wonSprite->mPosition = Vec2(int(_screenSize.x / 2), int(_screenSize.y / 2));
-	_wonSprite->mVelocity = Vec2(0, 0);
 	_lostSprite->mPosition = Vec2(int(_screenSize.x / 2), int(_screenSize.y / 2));
-	_lostSprite->mVelocity = Vec2(0, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -519,9 +517,6 @@ void CGameApp::AnimateObjects()
 		enem->Update(m_Timer.GetTimeElapsed());
 	}
 
-	_wonSprite->update(m_Timer.GetTimeElapsed());
-	_lostSprite->update(m_Timer.GetTimeElapsed());
-
 	enemyFire();
 	updateGameState();
 
@@ -568,6 +563,10 @@ void CGameApp::DrawObjects()
 	_Buffer->present();
 }
 
+//-----------------------------------------------------------------------------
+// Name : SpawnBullet () (Private)
+// Desc : Spawns a bullet with position, velocity and team given as arguments
+//-----------------------------------------------------------------------------
 void CGameApp::SpawnBullet(const Vec2 position, const Vec2 velocity, const bool team)
 {
 	_bullets.push_back(new Sprite("data/projectile.bmp", RGB(0xff, 0x00, 0xff)));
@@ -584,6 +583,11 @@ void CGameApp::SpawnBullet(const Vec2 position, const Vec2 velocity, const bool 
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Name : detectCollision () (Private)
+// Desc : This function is called for each bullet spawned at one time to detect
+// if it has hit something.
+//-----------------------------------------------------------------------------
 bool CGameApp::detectCollision(const Sprite *bullet)
 {
 	if (bulletUnitCollision(*bullet, *_Player1) && bullet->team) {
@@ -606,6 +610,11 @@ bool CGameApp::detectCollision(const Sprite *bullet)
 	return false;
  }
 
+//-----------------------------------------------------------------------------
+// Name : bulletUnitCollision () (Private)
+// Desc : Function that checks when a bullet has colided with a given 
+// player unit
+//-----------------------------------------------------------------------------
 bool CGameApp::bulletUnitCollision(const Sprite& bullet, CPlayer& unit)
 {
 	if (unit.isDead())
@@ -620,6 +629,11 @@ bool CGameApp::bulletUnitCollision(const Sprite& bullet, CPlayer& unit)
 	return false;
 }
 
+
+//-----------------------------------------------------------------------------
+// Name : addStars () (Private)
+// Desc : Adds specified number of stars in the background.
+//-----------------------------------------------------------------------------
 void CGameApp::addStars(int noStars)
 {
 	srand(time(NULL));
@@ -634,6 +648,10 @@ void CGameApp::addStars(int noStars)
 	Sleep(rand() % 5);
 }
 
+//-----------------------------------------------------------------------------
+// Name : scrollBackground () (Private)
+// Desc : Moves the stars in the background.
+//-----------------------------------------------------------------------------
 void CGameApp::scrollBackground(float dt)
 {
 	srand(time(NULL));
@@ -647,6 +665,10 @@ void CGameApp::scrollBackground(float dt)
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Name : addEnemies () (Private)
+// Desc : Adds specified number of enemies.
+//-----------------------------------------------------------------------------
 void CGameApp::addEnemies(int noEnemies)
 {
 	srand(time(NULL));
@@ -666,6 +688,11 @@ void CGameApp::addEnemies(int noEnemies)
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Name : enemyFire () (Private)
+// Desc : Iterates trough all the enemies and makes them fire using a
+// random pattern.
+//-----------------------------------------------------------------------------
 void CGameApp::enemyFire()
 {
 	srand(time(NULL));
@@ -678,6 +705,10 @@ void CGameApp::enemyFire()
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Name : holdInside () (Private)
+// Desc : Holds a player unit inside of the playable window.
+//-----------------------------------------------------------------------------
 void CGameApp::holdInside(CPlayer& unit) 
 {
 	// bind player inside right margin
@@ -701,6 +732,10 @@ void CGameApp::holdInside(CPlayer& unit)
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Name : removeDead () (Private)
+// Desc : Removes all dead enemies from the game.
+//-----------------------------------------------------------------------------
 void CGameApp::removeDead()
 {
 	for (auto enem : _enemies) {
@@ -711,11 +746,19 @@ void CGameApp::removeDead()
 	}
 }
 
-double distance(Sprite& bullet, CPlayer& player)
+//-----------------------------------------------------------------------------
+// Name : btpDistance () (Private)
+// Desc : Calculates bullet to player unit distance.
+//-----------------------------------------------------------------------------
+double btpDistance(Sprite& bullet, CPlayer& player)
 {
-	return sqrt(pow(bullet.mPosition.x - player.Position().x, 2) + pow(bullet.mPosition.y + player.Position().y, 2));
+	return bullet.mPosition.Distance(player.Position());
 }
 
+//-----------------------------------------------------------------------------
+// Name : moveTowards () (Private)
+// Desc : Moves a bullet towards a specified destination.
+//-----------------------------------------------------------------------------
 void moveTowards(Sprite& bullet, const Vec2 destination)
 {
 	if (bullet.mPosition.x > destination.x) {
@@ -726,6 +769,10 @@ void moveTowards(Sprite& bullet, const Vec2 destination)
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Name : trackPlayer () (Private)
+// Desc : Moves a bullet towards the closest alive player.
+//-----------------------------------------------------------------------------
 void CGameApp::trackPlayer(Sprite& bullet) 
 {
 	if (_Player1->isDead() && !_Player2->isDead()) {
@@ -735,7 +782,7 @@ void CGameApp::trackPlayer(Sprite& bullet)
 		moveTowards(bullet, _Player1->Position());
 	}
 	else if (!_Player1->isDead() && !_Player2->isDead()) {
-		if (distance(bullet, *_Player1) < distance(bullet, *_Player2)) {
+		if (btpDistance(bullet, *_Player1) < btpDistance(bullet, *_Player2)) {
 			moveTowards(bullet, _Player1->Position());
 		}
 		else {
@@ -744,6 +791,10 @@ void CGameApp::trackPlayer(Sprite& bullet)
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Name : updateGameState () (Private)
+// Desc : Updates the game state when all players or all enemies have died.
+//-----------------------------------------------------------------------------
 void CGameApp::updateGameState()
 {
 	if (_Player1->isDead() && _Player2->isDead()) {
