@@ -719,17 +719,10 @@ double distance(Sprite& bullet, CPlayer& player)
 void moveTowards(Sprite& bullet, const Vec2 destination)
 {
 	if (bullet.mPosition.x > destination.x) {
-		bullet.mVelocity.x -= 10;
+		bullet.mVelocity.x -= 2;
 	}
 	else {
-		bullet.mVelocity.x += 10;
-	}
-
-	if (bullet.mPosition.y > destination.y) {
-		bullet.mVelocity.y -= 10;
-	}
-	else {
-		bullet.mVelocity.y += 10;
+		bullet.mVelocity.x += 2;
 	}
 }
 
