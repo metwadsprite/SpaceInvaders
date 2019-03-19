@@ -797,10 +797,10 @@ void CGameApp::trackPlayer(Sprite& bullet)
 //-----------------------------------------------------------------------------
 void CGameApp::updateGameState()
 {
-	if (_Player1->isDead() && _Player2->isDead()) {
+	if (_Player1->isDead() && _Player2->isDead() && _gameState == ONGOING) {
 		_gameState = LOST;
 	}
-	else if (!_enemies.size()) {
+	else if (!_enemies.size() == _gameState == ONGOING) {
 		_gameState = WON;
 	}
 	else {
