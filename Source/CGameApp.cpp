@@ -800,10 +800,10 @@ void CGameApp::updateGameState()
 	if (_Player1->isDead() && _Player2->isDead() && _gameState == ONGOING) {
 		_gameState = LOST;
 	}
-	else if (!_enemies.size() == _gameState == ONGOING) {
+	else if (!_enemies.size() && _gameState == ONGOING) {
 		_gameState = WON;
 	}
-	else {
+	else if (_gameState == ONGOING) {
 		_gameState = ONGOING;
 	}
 }
