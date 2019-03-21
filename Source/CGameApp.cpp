@@ -367,6 +367,32 @@ void CGameApp::ReleaseObjects( )
 		_lostSprite = NULL;
 	}
 
+	if (_livesText.first != NULL) {
+		delete _livesText.first;
+		_livesText.first = NULL;
+	}
+
+	if (_livesText.second != NULL) {
+		delete _livesText.second;
+		_livesText.second = NULL;
+	}
+
+	if (_scoreText.first != NULL) {
+		delete _scoreText.first;
+		_scoreText.first = NULL;
+	}
+
+	if (_scoreText.second != NULL) {
+		delete _scoreText.second;
+		_scoreText.second = NULL;
+	}
+
+	while (!_enemies.empty()) delete _enemies.front(), _enemies.pop_front();
+	while (!_bullets.empty()) delete _bullets.front(), _bullets.pop_front();
+	while (!_stars.empty()) delete _stars.front(), _stars.pop_front();
+	while (!_livesBlue.empty()) delete _livesBlue.front(), _livesBlue.pop_front();
+	while (!_livesRed.empty()) delete _livesRed.front(), _livesRed.pop_front();
+
 	if(_Buffer != NULL)
 	{
 		delete _Buffer;
@@ -553,6 +579,9 @@ void CGameApp::DrawObjects()
 
 		for (auto bul : _bullets)
 			bul->draw();
+
+		_livesText.first->draw();
+		_livesText.second->draw();
 
 		for (auto enem : _enemies) {
 			enem->Draw();
@@ -760,6 +789,7 @@ void CGameApp::removeDead()
 
 	for (auto enem : _enemies) {
 		if (enem->isDead()) {
+			delete enem;
 			_enemies.remove(enem);
 			break;
 		}
@@ -828,14 +858,29 @@ void CGameApp::updateGameState()
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Name : setPLives () (Private)
+// Desc : Sets number of lives for all players and also adds the heart sprite.
+//-----------------------------------------------------------------------------
 void CGameApp::setPLives(int playerLives)
 {
 	_Player1->setLives(playerLives);
 	_Player2->setLives(playerLives);
 
-	Vec2 bluePos(30, 30);
-	Vec2 redPos(_screenSize.x - 50, 30.0);
+	Vec2 bluePos(30, 125);
+	Vec2 redPos(_screenSize.x - 50, 125.0);
 	Vec2 increment(55, 0);
+
+	_livesText.first = new Sprite("data/lives_text.bmp", RGB(0xff, 0x00, 0xff));
+	_livesText.second = new Sprite("data/lives_text.bmp", RGB(0xff, 0x00, 0xff));
+
+	_livesText.first->mPosition = Vec2(100, 50);
+	_livesText.first->mVelocity = Vec2(0, 0);
+	_livesText.first->setBackBuffer(_Buffer);
+
+	_livesText.second->mPosition = Vec2(_screenSize.x - 140, 50.0);
+	_livesText.second->mVelocity = Vec2(0, 0);
+	_livesText.second->setBackBuffer(_Buffer);
 
 	for (int it = 0; it != playerLives; ++it) {
 		_livesBlue.push_back(new Sprite("data/heart_blue.bmp", RGB(0xff, 0x00, 0xff)));

@@ -122,6 +122,9 @@ private:
 	GameState				_gameState;			// Game state (ongoing, won, lost)
 	Sprite*					_wonSprite;			// Information to be displayed when game is won
 	Sprite*					_lostSprite;		// Information to be displayed when game is lost
+
+	std::pair<Sprite*, Sprite*> _livesText;
+	std::pair<Sprite*, Sprite*> _scoreText;
 };
 
 #endif // _CGAMEAPP_H_
