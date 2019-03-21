@@ -45,6 +45,12 @@ public:
 		SPEED_STOP
 	};
 
+	enum TEAM {
+		PLAYER1		= 1,
+		PLAYER2		= 2,
+		ENEMY		= 3
+	};
+
 	//-------------------------------------------------------------------------
 	// Constructors & Destructors for This Class.
 	//-------------------------------------------------------------------------
@@ -68,6 +74,7 @@ public:
 	int						getLives();
 	void					setLives(int noLives);
 	bool					hasExploded();
+	void					setTeam(TEAM team);
 
 private:
 	//-------------------------------------------------------------------------
@@ -82,6 +89,7 @@ private:
 	int						_explosionFrame;
 	bool					_isDead;
 	int						_lives;
+	TEAM					_team;
 };
 
 #endif // _CPLAYER_H_

@@ -1,3 +1,11 @@
+//-----------------------------------------------------------------------------
+// File: ScoreSprite.cpp
+//
+// Desc: This file stores the object used to display and update the score
+// counter for each player
+//
+// Created by Vasilescu Vlad
+//-----------------------------------------------------------------------------
 #include "ScoreSprite.h"
 
 #include <string>
@@ -129,4 +137,24 @@ void ScoreSprite::draw()
 	scoreDig1->draw();
 	scoreDig2->draw();
 	scoreDig3->draw();
+}
+
+//-----------------------------------------------------------------------------
+// Name : move () (Public)
+// Desc : Moves the object to a different position on the screen
+//-----------------------------------------------------------------------------
+void ScoreSprite::move(const Vec2 destination)
+{
+	position = destination;
+
+	posDig0 = Vec2(position.x - 75, position.y + 75);
+	posDig1 = Vec2(position.x - 25, position.y + 75);
+	posDig2 = Vec2(position.x + 25, position.y + 75);
+	posDig3 = Vec2(position.x + 75, position.y + 75);
+
+	scoreText->mPosition = position;
+	scoreDig0->mPosition = posDig0;
+	scoreDig1->mPosition = posDig1;
+	scoreDig2->mPosition = posDig2;
+	scoreDig3->mPosition = posDig3;
 }

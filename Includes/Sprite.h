@@ -32,9 +32,6 @@ public:
 
 	int frameCounter;
 
-	// 0 - player, 1 - enemy
-	bool team;
-
 private:
 	// Make copy constructor and assignment operator private
 	// so client cannot copy Sprites. We do this because

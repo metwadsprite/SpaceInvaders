@@ -126,9 +126,9 @@ void CPlayer::Draw()
 
 void CPlayer::Move(ULONG ulDirection)
 {
-	double acc			= 10;		// acceleration
+	double acc			= 5;		// acceleration
 	double brk			= 5 * acc;	// break force
-	double topSpeed		= 750;		// maximum speed
+	double topSpeed		= 500;		// maximum speed
 
 	// code to move forward
 	if (ulDirection & CPlayer::DIR_FORWARD) {
@@ -234,4 +234,9 @@ void CPlayer::setLives(int noLives)
 bool CPlayer::hasExploded()
 {
 	return _explosion;
+}
+
+void CPlayer::setTeam(TEAM team)
+{
+	_team = team;
 }

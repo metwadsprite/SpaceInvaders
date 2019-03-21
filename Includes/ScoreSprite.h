@@ -6,7 +6,6 @@
 //
 // Created by Vasilescu Vlad
 //-----------------------------------------------------------------------------
-
 #ifndef _SCORESPRITE_H_
 #define _SCORESPRITE_H_
 
@@ -30,22 +29,22 @@ private:
 	//-------------------------------------------------------------------------
 	// Private Variables for This Class.
 	//-------------------------------------------------------------------------
-	int			scoreInt;
+	int					scoreInt;
 	
-	Vec2		position;
-	Vec2		posDig0;
-	Vec2		posDig1;
-	Vec2		posDig2;
-	Vec2		posDig3;
+	Vec2				position;
+	Vec2				posDig0;
+	Vec2				posDig1;
+	Vec2				posDig2;
+	Vec2				posDig3;
 	
-	Sprite*		scoreText;
+	Sprite*				scoreText;
 	
-	Sprite*		scoreDig0;
-	Sprite*		scoreDig1;
-	Sprite*		scoreDig2;
-	Sprite*		scoreDig3;
+	Sprite*				scoreDig0;
+	Sprite*				scoreDig1;
+	Sprite*				scoreDig2;
+	Sprite*				scoreDig3;
 
-	const BackBuffer* BF;
+	const BackBuffer*	BF;
 
 public:
 	//-------------------------------------------------------------------------
@@ -59,6 +58,7 @@ public:
 	//-------------------------------------------------------------------------
 	void updateScore(int increment);
 	void draw();
+	void move(const Vec2 destination);
 
 private:
 	//-------------------------------------------------------------------------

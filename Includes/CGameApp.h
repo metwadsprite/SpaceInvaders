@@ -18,6 +18,7 @@
 #include "BackBuffer.h"
 #include "ImageFile.h"
 #include "ScoreSprite.h"
+#include "Bullet.h"
 
 #include <list>
 
@@ -68,9 +69,9 @@ private:
 	void		AnimateObjects();
 	void		DrawObjects();
 	void		ProcessInput();
-	void		SpawnBullet(const Vec2 position, const Vec2 velocity, const bool team);
-	bool		detectCollision(const Sprite *bullet);
-	bool		bulletUnitCollision(const Sprite& bullet, CPlayer& unit);
+	void		SpawnBullet(const Vec2 position, const Vec2 velocity, const CPlayer::TEAM team);
+	bool		detectCollision(const Bullet* bullet);
+	bool		bulletUnitCollision(const Bullet& bullet, CPlayer& unit);
 	void		addStars(int noStars);
 	void		scrollBackground(float dt);
 	void		addEnemies(int noEnemies);
@@ -80,6 +81,7 @@ private:
 	void		trackPlayer(Sprite& bullet);
 	void		updateGameState();
 	void		setPLives(int playerLives);
+	void		moveEnemies();
 	
 	//-------------------------------------------------------------------------
 	// Private Static Functions For This Class
@@ -113,7 +115,7 @@ private:
 	CPlayer*					_Player2;			// Player two
 
 	std::list<CPlayer*>			_enemies;			// List containing all enemies alive
-	std::list<Sprite*>			_bullets;			// List containing all bullets on the screen
+	std::list<Bullet*>			_bullets;			// List containing all bullets on the screen
 	std::list<Sprite*>			_stars;				// List containing stars scrolling in the background
 	std::list<Sprite*>			_livesBlue;			// Lives for blue player
 	std::list<Sprite*>			_livesRed;			// Lives for red player
@@ -124,9 +126,12 @@ private:
 	Sprite*						_wonSprite;			// Information to be displayed when game is won
 	Sprite*						_lostSprite;		// Information to be displayed when game is lost
 
-	std::pair<Sprite*, Sprite*> _livesText;
+	std::pair<Sprite*, Sprite*> _livesText;			// Text above the lives on the screen
 
-	ScoreSprite*				_score;
+	ScoreSprite*				_scoreP1;			// Score for the player 1
+	ScoreSprite*				_scoreP2;			// Score for the player 2
+
+	int							frameCounter;
 };
 
 #endif // _CGAMEAPP_H_

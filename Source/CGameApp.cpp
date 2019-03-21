@@ -13,14 +13,10 @@
 
 #include <ctime>
 #include <cstdlib>
-#include <cmath>
 
-#define PLAYER false
-#define ENEMY true
-
-extern		HINSTANCE g_hInst;
-bool		p1Shoot = false;
-bool		p2Shoot = false;
+extern	HINSTANCE g_hInst;
+bool p1Shoot = false;
+bool p2Shoot = false;
 
 //-----------------------------------------------------------------------------
 // CGameApp Member Functions
@@ -38,7 +34,10 @@ CGameApp::CGameApp()
 	_Buffer			= NULL;
 	_Player1		= NULL;
 	_Player2		= NULL;
-	_score			= NULL;
+	_scoreP1		= NULL;
+	_scoreP2		= NULL;
+	_wonSprite		= NULL;
+	_lostSprite		= NULL;
 	m_LastFrameRate = 0;
 	_gameState		= GameState::ONGOING;
 }
@@ -314,14 +313,20 @@ bool CGameApp::BuildObjects()
 	_wonSprite = new Sprite("data/winscreen.bmp", RGB(0xff, 0x00, 0xff));
 	_lostSprite = new Sprite("data/losescreen.bmp", RGB(0xff, 0x00, 0xff));
 
-	_score = new ScoreSprite(Vec2(100, 200), _Buffer);
+	_Player1->setTeam(CPlayer::TEAM::PLAYER1);
+	_Player2->setTeam(CPlayer::TEAM::PLAYER2);
+
+	_scoreP1 = new ScoreSprite(Vec2(100, 200), _Buffer);
+	_scoreP2 = new ScoreSprite(Vec2(_screenSize.x - 140, 200.0), _Buffer);
 
 	_wonSprite->setBackBuffer(_Buffer);
 	_lostSprite->setBackBuffer(_Buffer);
 
 	addStars(20);
-	addEnemies(ceil((_screenSize.x - 600) / 100) * 3);
+	addEnemies(33);
 	setPLives(3);
+
+	frameCounter = 0;
 
 	if(!m_imgBackground.LoadBitmapFromFile("data/background.bmp", GetDC(m_hWnd)))
 		return false;
@@ -380,9 +385,14 @@ void CGameApp::ReleaseObjects( )
 		_livesText.second = NULL;
 	}
 
-	if (_score != NULL) {
-		delete _score;
-		_score = NULL;
+	if (_scoreP1 != NULL) {
+		delete _scoreP1;
+		_scoreP1 = NULL;
+	}
+
+	if (_scoreP2 != NULL) {
+		delete _scoreP2;
+		_scoreP2 = NULL;
 	}
 
 	while (!_enemies.empty()) delete _enemies.front(), _enemies.pop_front();
@@ -463,7 +473,7 @@ void CGameApp::ProcessInput()
 		}
 		else {
 			if (p1Shoot)
-				SpawnBullet(_Player1->Position(), Vec2(0, -800), PLAYER);
+				SpawnBullet(_Player1->Position(), Vec2(0, -400), CPlayer::TEAM::PLAYER1);
 			p1Shoot = false;
 		}
 	}
@@ -480,7 +490,7 @@ void CGameApp::ProcessInput()
 		}
 		else {
 			if (p2Shoot)
-				SpawnBullet(_Player2->Position(), Vec2(0, -800), PLAYER);
+				SpawnBullet(_Player2->Position(), Vec2(0, -400), CPlayer::TEAM::PLAYER2);
 			p2Shoot = false;
 		}
 	}
@@ -528,7 +538,7 @@ void CGameApp::AnimateObjects()
 	for (auto bul : _bullets) {
 		bul->update(m_Timer.GetTimeElapsed());
 
-		if (bul->team == ENEMY) {
+		if (bul->team == CPlayer::TEAM::ENEMY) {
 			trackPlayer(*bul);
 		}
 
@@ -538,12 +548,19 @@ void CGameApp::AnimateObjects()
 		}
 	}
 
+	moveEnemies();
+
 	for (auto enem : _enemies) {
 		enem->Update(m_Timer.GetTimeElapsed());
 	}
 
 	enemyFire();
 	updateGameState();
+
+	if (_gameState == GameState::WON || _gameState == GameState::LOST) {
+		_scoreP1->move(Vec2(_screenSize.x / 2 - 150, _screenSize.y / 2 + 200));
+		_scoreP2->move(Vec2(_screenSize.x / 2 + 150, _screenSize.y / 2 + 200));
+	}
 
 	scrollBackground(m_Timer.GetTimeElapsed());
 }
@@ -561,6 +578,9 @@ void CGameApp::DrawObjects()
 	for (auto star : _stars) {
 		star->draw();
 	}
+
+	_scoreP1->draw();
+	_scoreP2->draw();
 
 	if (_gameState == GameState::ONGOING) {
 		if (!_Player1->isDead())
@@ -581,8 +601,6 @@ void CGameApp::DrawObjects()
 		_livesText.first->draw();
 		_livesText.second->draw();
 
-		_score->draw();
-
 		for (auto enem : _enemies) {
 			enem->Draw();
 			enem->frameCounter()++;
@@ -602,9 +620,9 @@ void CGameApp::DrawObjects()
 // Name : SpawnBullet () (Private)
 // Desc : Spawns a bullet with position, velocity and team given as arguments
 //-----------------------------------------------------------------------------
-void CGameApp::SpawnBullet(const Vec2 position, const Vec2 velocity, const bool team)
+void CGameApp::SpawnBullet(const Vec2 position, const Vec2 velocity, const CPlayer::TEAM team)
 {
-	_bullets.push_back(new Sprite("data/projectile.bmp", RGB(0xff, 0x00, 0xff)));
+	_bullets.push_back(new Bullet("data/projectile.bmp", RGB(0xff, 0x00, 0xff)));
 	_bullets.back()->setBackBuffer(_Buffer);
 	_bullets.back()->mPosition = position;
 	_bullets.back()->mVelocity = velocity;
@@ -623,9 +641,9 @@ void CGameApp::SpawnBullet(const Vec2 position, const Vec2 velocity, const bool 
 // Desc : This function is called for each bullet spawned at one time to detect
 // if it has hit something.
 //-----------------------------------------------------------------------------
-bool CGameApp::detectCollision(const Sprite *bullet)
+bool CGameApp::detectCollision(const Bullet* bullet)
 {
-	if (bulletUnitCollision(*bullet, *_Player1) && bullet->team) {
+	if (bulletUnitCollision(*bullet, *_Player1) && bullet->team == CPlayer::TEAM::ENEMY) {
 		_Player1->takeDamage();
 
 		if (_livesBlue.size())
@@ -634,7 +652,7 @@ bool CGameApp::detectCollision(const Sprite *bullet)
 		return true;
 	}
 	
-	if (bulletUnitCollision(*bullet, *_Player2) && bullet->team) {
+	if (bulletUnitCollision(*bullet, *_Player2) && bullet->team == CPlayer::TEAM::ENEMY) {
 		_Player2->takeDamage();
 
 		if (_livesRed.size())
@@ -644,7 +662,20 @@ bool CGameApp::detectCollision(const Sprite *bullet)
 	}
 
 	for (auto enem : _enemies) {
-		if (bulletUnitCollision(*bullet, *enem) && !bullet->team) {
+		if (bulletUnitCollision(*bullet, *enem)) {
+			if (enem->hasExploded()) {
+				return false;
+			}
+			if (bullet->team == CPlayer::TEAM::PLAYER1) {
+				_scoreP1->updateScore(10);
+			}
+			else if (bullet->team == CPlayer::TEAM::PLAYER2) {
+				_scoreP2->updateScore(10);
+			}
+			else {
+				return false;
+			}
+			
 			enem->Explode();
 			return true;
 		}
@@ -658,7 +689,7 @@ bool CGameApp::detectCollision(const Sprite *bullet)
 // Desc : Function that checks when a bullet has colided with a given 
 // player unit
 //-----------------------------------------------------------------------------
-bool CGameApp::bulletUnitCollision(const Sprite& bullet, CPlayer& unit)
+bool CGameApp::bulletUnitCollision(const Bullet& bullet, CPlayer& unit)
 {
 	if (unit.isDead())
 		return false;
@@ -715,17 +746,18 @@ void CGameApp::scrollBackground(float dt)
 void CGameApp::addEnemies(int noEnemies)
 {
 	srand(time(NULL));
-	Vec2 position = Vec2(300, 50);
+	Vec2 position = Vec2(_screenSize.x / 2 - 500, 50.0);
 	
 	for (int it = 0; it != noEnemies; ++it) {
 		_enemies.push_back(new CPlayer(_Buffer, "data/enemyship.bmp"));
 		_enemies.back()->Position() = position;
 		_enemies.back()->Velocity() = Vec2(0, 0);
 		_enemies.back()->frameCounter() = rand() % 2000;
+		_enemies.back()->setTeam(CPlayer::TEAM::ENEMY);
 
 		position.x += 100;
-		if (position.x > _screenSize.x - 300) {
-			position.x = 300;
+		if (position.x > _screenSize.x / 2 + 500) {
+			position.x = _screenSize.x / 2 - 500;
 			position.y += 90;
 		}
 	}
@@ -743,7 +775,7 @@ void CGameApp::enemyFire()
 	for (auto enem : _enemies) {
 		if (enem->frameCounter() == 2000) {
 			enem->frameCounter() = rand() % 1500;
-			SpawnBullet(enem->Position(), Vec2(0, 200), ENEMY);
+			SpawnBullet(enem->Position(), Vec2(0, 200), CPlayer::TEAM::ENEMY);
 		}
 	}
 }
@@ -793,7 +825,6 @@ void CGameApp::removeDead()
 		if (enem->isDead()) {
 			delete enem;
 			_enemies.remove(enem);
-			_score->updateScore(10);
 			break;
 		}
 	}
@@ -902,5 +933,32 @@ void CGameApp::setPLives(int playerLives)
 
 		bluePos += increment;
 		redPos -= increment;
+	}
+}
+
+void CGameApp::moveEnemies()
+{
+	frameCounter++;
+
+	if (frameCounter > 1400) {
+		frameCounter = 0;
+	}
+
+	for (auto enem : _enemies) {
+		if (frameCounter <= 300) {
+			enem->Velocity() = Vec2(-80, 0);
+		}
+		else if (frameCounter <= 400) {
+			enem->Velocity() = Vec2(0, 100);
+		}
+		else if (frameCounter <= 1000) {
+			enem->Velocity() = Vec2(100, 0);
+		}
+		else if (frameCounter <= 1100) {
+			enem->Velocity() = Vec2(0, -100);
+		}
+		else if (frameCounter <= 1400) {
+			enem->Velocity() = Vec2(-100, 0);
+		}
 	}
 }

@@ -177,6 +177,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Includes\BackBuffer.h" />
+    <ClInclude Include="Includes\Bullet.h" />
     <ClInclude Include="Includes\CGameApp.h" />
     <ClInclude Include="Includes\CPlayer.h" />
     <ClInclude Include="Includes\CTimer.h" />
