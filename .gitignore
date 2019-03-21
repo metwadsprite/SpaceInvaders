@@ -7,4 +7,9 @@
 /Docs
 /Compiled/Debug
 /.vs/GameFramework/v15
+/.vs/Game
 /d_Game.exe
+/d_Game.ilk
+/Game.vcxproj.filters
+/Game.vcxproj.user
+/Game.sln
