@@ -38,6 +38,7 @@ CGameApp::CGameApp()
 	_Buffer			= NULL;
 	_Player1		= NULL;
 	_Player2		= NULL;
+	_score			= NULL;
 	m_LastFrameRate = 0;
 	_gameState		= GameState::ONGOING;
 }
@@ -313,6 +314,8 @@ bool CGameApp::BuildObjects()
 	_wonSprite = new Sprite("data/winscreen.bmp", RGB(0xff, 0x00, 0xff));
 	_lostSprite = new Sprite("data/losescreen.bmp", RGB(0xff, 0x00, 0xff));
 
+	_score = new ScoreSprite(Vec2(100, 200), _Buffer);
+
 	_wonSprite->setBackBuffer(_Buffer);
 	_lostSprite->setBackBuffer(_Buffer);
 
@@ -377,14 +380,9 @@ void CGameApp::ReleaseObjects( )
 		_livesText.second = NULL;
 	}
 
-	if (_scoreText.first != NULL) {
-		delete _scoreText.first;
-		_scoreText.first = NULL;
-	}
-
-	if (_scoreText.second != NULL) {
-		delete _scoreText.second;
-		_scoreText.second = NULL;
+	if (_score != NULL) {
+		delete _score;
+		_score = NULL;
 	}
 
 	while (!_enemies.empty()) delete _enemies.front(), _enemies.pop_front();
@@ -582,6 +580,8 @@ void CGameApp::DrawObjects()
 
 		_livesText.first->draw();
 		_livesText.second->draw();
+
+		_score->draw();
 
 		for (auto enem : _enemies) {
 			enem->Draw();
@@ -781,8 +781,10 @@ void CGameApp::holdInside(CPlayer& unit)
 //-----------------------------------------------------------------------------
 void CGameApp::removeDead()
 {
-	if (!_Player1->getLives() && !_Player1->hasExploded())
+	if (!_Player1->getLives() && !_Player1->hasExploded()) {
 		_Player1->Explode();
+	}
+		
 
 	if (!_Player2->getLives() && !_Player2->hasExploded())
 		_Player2->Explode();
@@ -791,6 +793,7 @@ void CGameApp::removeDead()
 		if (enem->isDead()) {
 			delete enem;
 			_enemies.remove(enem);
+			_score->updateScore(10);
 			break;
 		}
 	}
