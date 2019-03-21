@@ -318,6 +318,7 @@ bool CGameApp::BuildObjects()
 
 	addStars(20);
 	addEnemies(ceil((_screenSize.x - 600) / 100) * 3);
+	setPLives(3);
 
 	if(!m_imgBackground.LoadBitmapFromFile("data/background.bmp", GetDC(m_hWnd)))
 		return false;
@@ -544,9 +545,14 @@ void CGameApp::DrawObjects()
 		if (!_Player2->isDead())
 			_Player2->Draw();
 
-		for (auto bul : _bullets) {
+		for (auto lb : _livesBlue)
+			lb->draw();
+
+		for (auto lr : _livesRed)
+			lr->draw();
+
+		for (auto bul : _bullets)
 			bul->draw();
-		}
 
 		for (auto enem : _enemies) {
 			enem->Draw();
@@ -591,12 +597,20 @@ void CGameApp::SpawnBullet(const Vec2 position, const Vec2 velocity, const bool 
 bool CGameApp::detectCollision(const Sprite *bullet)
 {
 	if (bulletUnitCollision(*bullet, *_Player1) && bullet->team) {
-		_Player1->Explode();
+		_Player1->takeDamage();
+
+		if (_livesBlue.size())
+			_livesBlue.pop_back();
+		
 		return true;
 	}
 	
 	if (bulletUnitCollision(*bullet, *_Player2) && bullet->team) {
-		_Player2->Explode();
+		_Player2->takeDamage();
+
+		if (_livesRed.size())
+			_livesRed.pop_back();
+		
 		return true;
 	}
 
@@ -738,6 +752,12 @@ void CGameApp::holdInside(CPlayer& unit)
 //-----------------------------------------------------------------------------
 void CGameApp::removeDead()
 {
+	if (!_Player1->getLives() && !_Player1->hasExploded())
+		_Player1->Explode();
+
+	if (!_Player2->getLives() && !_Player2->hasExploded())
+		_Player2->Explode();
+
 	for (auto enem : _enemies) {
 		if (enem->isDead()) {
 			_enemies.remove(enem);
@@ -805,5 +825,34 @@ void CGameApp::updateGameState()
 	}
 	else if (_gameState == ONGOING) {
 		_gameState = ONGOING;
+	}
+}
+
+void CGameApp::setPLives(int playerLives)
+{
+	_Player1->setLives(playerLives);
+	_Player2->setLives(playerLives);
+
+	Vec2 bluePos(30, 30);
+	Vec2 redPos(_screenSize.x - 50, 30.0);
+	Vec2 increment(55, 0);
+
+	for (int it = 0; it != playerLives; ++it) {
+		_livesBlue.push_back(new Sprite("data/heart_blue.bmp", RGB(0xff, 0x00, 0xff)));
+		_livesRed.push_back(new Sprite("data/heart_red.bmp", RGB(0xff, 0x00, 0xff)));
+
+		auto& lastBlue = _livesBlue.back();
+		auto& lastRed = _livesRed.back();
+
+		lastBlue->mPosition = bluePos;
+		lastBlue->mVelocity = Vec2(0, 0);
+		lastBlue->setBackBuffer(_Buffer);
+
+		lastRed->mPosition = redPos;
+		lastRed->mVelocity = Vec2(0, 0);
+		lastRed->setBackBuffer(_Buffer);
+
+		bluePos += increment;
+		redPos -= increment;
 	}
 }

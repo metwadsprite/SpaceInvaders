@@ -78,6 +78,7 @@ private:
 	void		removeDead();
 	void		trackPlayer(Sprite& bullet);
 	void		updateGameState();
+	void		setPLives(int playerLives);
 	
 	//-------------------------------------------------------------------------
 	// Private Static Functions For This Class
@@ -106,13 +107,15 @@ private:
 
 	CImageFile				m_imgBackground;	// Background image
 
-	BackBuffer*				_Buffer;
+	BackBuffer*				_Buffer;			// Back buffer
 	CPlayer*				_Player1;			// Player one
 	CPlayer*				_Player2;			// Player two
 
+	std::list<CPlayer*>		_enemies;			// List containing all enemies alive
 	std::list<Sprite*>		_bullets;			// List containing all bullets on the screen
 	std::list<Sprite*>		_stars;				// List containing stars scrolling in the background
-	std::list<CPlayer*>		_enemies;			// List containing all enemies alive
+	std::list<Sprite*>		_livesBlue;			// Lives for blue player
+	std::list<Sprite*>		_livesRed;			// Lives for red player
 
 	Vec2					_screenSize;		// Provides easy access to the screen size
 

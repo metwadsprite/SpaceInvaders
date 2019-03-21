@@ -22,6 +22,7 @@ CPlayer::CPlayer(const BackBuffer *pBackBuffer, const char* texturePath)
 	_speedState	= SPEED_STOP;
 	_timer		= 0;
 	_isDead		= false;
+	_lives		= 1;
 
 	_sprite->setBackBuffer(pBackBuffer);
 
@@ -210,6 +211,27 @@ Vec2 CPlayer::getSize()
 	return Vec2(_sprite->width(), _sprite->height());
 }
 
-int& CPlayer::frameCounter() {
+int& CPlayer::frameCounter()
+{
 	return _sprite->frameCounter;
+}
+
+void CPlayer::takeDamage()
+{
+	_lives--;
+}
+
+int CPlayer::getLives()
+{
+	return _lives;
+}
+
+void CPlayer::setLives(int noLives)
+{
+	_lives = noLives;
+}
+
+bool CPlayer::hasExploded()
+{
+	return _explosion;
 }

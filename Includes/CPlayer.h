@@ -59,15 +59,15 @@ public:
 	void					Move(ULONG ulDirection);
 	Vec2&					Position();
 	Vec2&					Velocity();
-
 	void					Explode();
 	bool					AdvanceExplosion();
-
 	bool					isDead();
-
 	Vec2					getSize();
-
 	int&					frameCounter();
+	void					takeDamage();
+	int						getLives();
+	void					setLives(int noLives);
+	bool					hasExploded();
 
 private:
 	//-------------------------------------------------------------------------
@@ -77,12 +77,11 @@ private:
 	Sprite*					_sprite;
 	ESpeedStates			_speedState;
 	float					_timer;
-
 	bool					_explosion;
 	AnimatedSprite*			_explosionSprite;
 	int						_explosionFrame;
-
 	bool					_isDead;
+	int						_lives;
 };
 
 #endif // _CPLAYER_H_
