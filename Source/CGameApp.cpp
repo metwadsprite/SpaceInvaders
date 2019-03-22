@@ -15,8 +15,6 @@
 #include <cstdlib>
 
 extern	HINSTANCE g_hInst;
-bool p1Shoot = false;
-bool p2Shoot = false;
 
 //-----------------------------------------------------------------------------
 // CGameApp Member Functions
@@ -343,6 +341,10 @@ void CGameApp::SetupGameState()
 {
 	_Player1->Position() = Vec2(int(_screenSize.x / 3 * 1), int(_screenSize.y / 3 * 2));
 	_Player2->Position() = Vec2(int(_screenSize.x / 3 * 2), int(_screenSize.y / 3 * 2));
+
+	_Player1->frameCounter() = 200;
+	_Player2->frameCounter() = 200;
+
 	_wonSprite->mPosition = Vec2(int(_screenSize.x / 2), int(_screenSize.y / 2));
 	_lostSprite->mPosition = Vec2(int(_screenSize.x / 2), int(_screenSize.y / 2));
 }
@@ -468,13 +470,9 @@ void CGameApp::ProcessInput()
 		if (pKeyBuffer[0x53] & 0xF0) Direction |= CPlayer::DIR_BACKWARD;
 		if (pKeyBuffer[0x41] & 0xF0) Direction |= CPlayer::DIR_LEFT;
 		if (pKeyBuffer[0x44] & 0xF0) Direction |= CPlayer::DIR_RIGHT;
-		if (pKeyBuffer[VK_SPACE] & 0xF0) {
-			p1Shoot = true;
-		}
-		else {
-			if (p1Shoot)
-				SpawnBullet(_Player1->Position(), Vec2(0, -400), CPlayer::TEAM::PLAYER1);
-			p1Shoot = false;
+		if (pKeyBuffer[VK_SPACE] & 0xF0 && _Player1->frameCounter() >= 50) {
+			SpawnBullet(_Player1->Position(), Vec2(0, -400), CPlayer::TEAM::PLAYER1);
+			_Player1->frameCounter() = 0;
 		}
 	}
 
@@ -485,13 +483,9 @@ void CGameApp::ProcessInput()
 		if (pKeyBuffer[VK_NUMPAD5] & 0xF0) p2Direction |= CPlayer::DIR_BACKWARD;
 		if (pKeyBuffer[VK_NUMPAD4] & 0xF0) p2Direction |= CPlayer::DIR_LEFT;
 		if (pKeyBuffer[VK_NUMPAD6] & 0xF0) p2Direction |= CPlayer::DIR_RIGHT;
-		if (pKeyBuffer[VK_NUMPAD0] & 0xF0) {
-			p2Shoot = true;
-		}
-		else {
-			if (p2Shoot)
-				SpawnBullet(_Player2->Position(), Vec2(0, -400), CPlayer::TEAM::PLAYER2);
-			p2Shoot = false;
+		if (pKeyBuffer[VK_NUMPAD0] & 0xF0 && _Player2->frameCounter() >= 50) {
+			SpawnBullet(_Player2->Position(), Vec2(0, -400), CPlayer::TEAM::PLAYER2);
+			_Player2->frameCounter() = 0;
 		}
 	}
 	
@@ -525,12 +519,14 @@ void CGameApp::AnimateObjects()
 {
 	if (!_Player1->isDead()) {
 		_Player1->Update(m_Timer.GetTimeElapsed());
+		_Player1->frameCounter()++;
 	}
 
 	holdInside(*_Player1);
 	
 	if (!_Player2->isDead()) {
 		_Player2->Update(m_Timer.GetTimeElapsed());
+		_Player1->frameCounter()++;
 	}
 
 	holdInside(*_Player2);
@@ -623,10 +619,13 @@ void CGameApp::DrawObjects()
 void CGameApp::SpawnBullet(const Vec2 position, const Vec2 velocity, const CPlayer::TEAM team)
 {
 	_bullets.push_back(new Bullet("data/projectile.bmp", RGB(0xff, 0x00, 0xff)));
-	_bullets.back()->setBackBuffer(_Buffer);
-	_bullets.back()->mPosition = position;
-	_bullets.back()->mVelocity = velocity;
-	_bullets.back()->team = team;
+
+	auto& lastAdd = _bullets.back();
+
+	lastAdd->setBackBuffer(_Buffer);
+	lastAdd->mPosition = position;
+	lastAdd->mVelocity = velocity;
+	lastAdd->team = team;
 
 	if (velocity.y < 0) {
 		_bullets.back()->mPosition.y -= 75;
@@ -714,9 +713,12 @@ void CGameApp::addStars(int noStars)
 
 	for (int it = 0; it != noStars; ++it) {
 		_stars.push_back(new Sprite("data/star.bmp", RGB(0xff, 0x00, 0xff)));
-		_stars.back()->setBackBuffer(_Buffer);
-		_stars.back()->mVelocity = Vec2(0, rand() % 100 + 50);
-		_stars.back()->mPosition = Vec2(rand() % int(_screenSize.x), -int(_screenSize.x / 2));
+
+		auto& lastAdd = _stars.back();
+
+		lastAdd->setBackBuffer(_Buffer);
+		lastAdd->mVelocity = Vec2(0, rand() % 100 + 50);
+		lastAdd->mPosition = Vec2(rand() % int(_screenSize.x), -int(_screenSize.x / 2));
 	}
 
 	Sleep(rand() % 5);
@@ -750,10 +752,13 @@ void CGameApp::addEnemies(int noEnemies)
 	
 	for (int it = 0; it != noEnemies; ++it) {
 		_enemies.push_back(new CPlayer(_Buffer, "data/enemyship.bmp"));
-		_enemies.back()->Position() = position;
-		_enemies.back()->Velocity() = Vec2(0, 0);
-		_enemies.back()->frameCounter() = rand() % 2000;
-		_enemies.back()->setTeam(CPlayer::TEAM::ENEMY);
+
+		auto& lastAdd = _enemies.back();
+
+		lastAdd->Position() = position;
+		lastAdd->Velocity() = Vec2(0, 0);
+		lastAdd->frameCounter() = rand() % 2000;
+		lastAdd->setTeam(CPlayer::TEAM::ENEMY);
 
 		position.x += 100;
 		if (position.x > _screenSize.x / 2 + 500) {
@@ -946,19 +951,19 @@ void CGameApp::moveEnemies()
 
 	for (auto enem : _enemies) {
 		if (frameCounter <= 300) {
-			enem->Velocity() = Vec2(-80, 0);
+			enem->Velocity() = Vec2(-20, 0);
 		}
 		else if (frameCounter <= 400) {
-			enem->Velocity() = Vec2(0, 100);
+			enem->Velocity() = Vec2(0, 20);
 		}
 		else if (frameCounter <= 1000) {
-			enem->Velocity() = Vec2(100, 0);
+			enem->Velocity() = Vec2(20, 0);
 		}
 		else if (frameCounter <= 1100) {
-			enem->Velocity() = Vec2(0, -100);
+			enem->Velocity() = Vec2(0, -20);
 		}
 		else if (frameCounter <= 1400) {
-			enem->Velocity() = Vec2(-100, 0);
+			enem->Velocity() = Vec2(-20, 0);
 		}
 	}
 }
