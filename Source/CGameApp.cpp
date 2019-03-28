@@ -526,7 +526,7 @@ void CGameApp::AnimateObjects()
 	
 	if (!_Player2->isDead()) {
 		_Player2->Update(m_Timer.GetTimeElapsed());
-		_Player1->frameCounter()++;
+		_Player2->frameCounter()++;
 	}
 
 	holdInside(*_Player2);
