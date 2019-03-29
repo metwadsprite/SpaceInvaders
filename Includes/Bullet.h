@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// File: Bullet.h
+// File: Bullet.cpp
 //
 // Desc: This file contains the class that represents the bullet object.
 //

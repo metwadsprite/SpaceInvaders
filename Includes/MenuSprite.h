@@ -1,48 +1,44 @@
 //-----------------------------------------------------------------------------
-// File: ScoreSprite.cpp
+// File: MenuSprite.cpp
 //
-// Desc: This file stores the object used to display and update the score
-// counter for each player
+// Desc: This file contains the class that handles all the menu options.
 //
 // Created by Vasilescu Vlad
 //-----------------------------------------------------------------------------
-#ifndef _SCORESPRITE_H_
-#define _SCORESPRITE_H_
+#ifndef _MENUSPRITE_H_
+#define _MENUSPRITE_H_
 
 //-----------------------------------------------------------------------------
-// ScoreSprite Specific Includes
+// MenuSprite Specific Includes
 //-----------------------------------------------------------------------------
 #include "Sprite.h"
-#include "Vec2.h"
 #include "BackBuffer.h"
 
 //-----------------------------------------------------------------------------
 // Main Class Definitions
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-// Name : ScoreSprite (Class)
-// Desc : Score Sprite class that handles displaying the score and updating it.
+// Name : MenuSprite (Class)
+// Desc : Menu Sprite class that handles displaying the options in the 
+// game menu.
 //-----------------------------------------------------------------------------
-class ScoreSprite 
+class MenuSprite
 {
 private:
 	//-------------------------------------------------------------------------
 	// Private Variables for This Class.
 	//-------------------------------------------------------------------------
-	int					scoreInt;
-	
-	Vec2				position;
-	Vec2				posDig0;
-	Vec2				posDig1;
-	Vec2				posDig2;
-	Vec2				posDig3;
-	
-	Sprite*				scoreText;
-	
-	Sprite*				scoreDig0;
-	Sprite*				scoreDig1;
-	Sprite*				scoreDig2;
-	Sprite*				scoreDig3;
+	enum CHOICE {
+		START,
+		LOAD,
+		SAVE
+	};
+
+	CHOICE				select;
+
+	Sprite*				startText;
+	Sprite*				loadText;
+	Sprite*				saveText;
 
 	const BackBuffer*	BF;
 
@@ -50,23 +46,27 @@ public:
 	//-------------------------------------------------------------------------
 	// Constructors & Destructors for This Class.
 	//-------------------------------------------------------------------------
-	ScoreSprite(const Vec2 position, const BackBuffer* BF);
-	~ScoreSprite();
+	MenuSprite(const Vec2 position, const BackBuffer* BF);
+	~MenuSprite();
 
 	//-------------------------------------------------------------------------
 	// Public Functions for This Class.
 	//-------------------------------------------------------------------------
-	void	updateScore(int increment);
-	void	draw();
-	void	move(const Vec2 destination);
-	int		getScore();
-	void	setScore(int newScore);
+	void	draw(ULONG gameState);
+	void	opUp(ULONG gameState);
+	void	opDown(ULONG gameState);
+	CHOICE	getChoice();
+
+	//-------------------------------------------------------------------------
+	// Public Variables for This Class.
+	//-------------------------------------------------------------------------
+	int frameCounter;
 
 private:
 	//-------------------------------------------------------------------------
 	// Private Functions for This Class.
 	//-------------------------------------------------------------------------
-	void updateDigit(int digID, int no);
+	void updateSelect(CHOICE text, bool sel);
 };
 
 #endif

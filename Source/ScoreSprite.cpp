@@ -141,7 +141,7 @@ void ScoreSprite::draw()
 
 //-----------------------------------------------------------------------------
 // Name : move () (Public)
-// Desc : Moves the object to a different position on the screen
+// Desc : Moves the object to a different position on the screen.
 //-----------------------------------------------------------------------------
 void ScoreSprite::move(const Vec2 destination)
 {
@@ -157,4 +157,23 @@ void ScoreSprite::move(const Vec2 destination)
 	scoreDig1->mPosition = posDig1;
 	scoreDig2->mPosition = posDig2;
 	scoreDig3->mPosition = posDig3;
+}
+
+//-----------------------------------------------------------------------------
+// Name : getScore () (Public)
+// Desc : Returns score for given player as integer.
+//-----------------------------------------------------------------------------
+int ScoreSprite::getScore()
+{
+	return scoreInt;
+}
+
+//-----------------------------------------------------------------------------
+// Name : setScore () (Public)
+// Desc : Sets score for given player.
+//-----------------------------------------------------------------------------
+void ScoreSprite::setScore(int newScore)
+{
+	scoreInt = 0;
+	updateScore(newScore);
 }

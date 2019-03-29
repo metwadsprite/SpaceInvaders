@@ -19,6 +19,7 @@
 #include "ImageFile.h"
 #include "ScoreSprite.h"
 #include "Bullet.h"
+#include "MenuSprite.h"
 
 #include <list>
 
@@ -55,7 +56,8 @@ public:
 		START,
 		ONGOING,
 		LOST,
-		WON
+		WON,
+		PAUSE
 	};
 	
 private:
@@ -81,8 +83,10 @@ private:
 	void		removeDead();
 	void		trackPlayer(Sprite& bullet);
 	void		updateGameState();
-	void		setPLives(int playerLives);
+	void		setPLives(int livesP1, int livesP2);
 	void		moveEnemies();
+	void		saveGame();
+	void		loadGame();
 	
 	//-------------------------------------------------------------------------
 	// Private Static Functions For This Class
@@ -134,7 +138,7 @@ private:
 
 	int							frameCounter;
 
-	Sprite*						startScreen;
+	MenuSprite*					gameMenu;
 };
 
 #endif // _CGAMEAPP_H_

@@ -13,6 +13,7 @@
 
 #include <ctime>
 #include <cstdlib>
+#include <fstream>
 
 extern	HINSTANCE g_hInst;
 
@@ -36,6 +37,7 @@ CGameApp::CGameApp()
 	_scoreP2		= NULL;
 	_wonSprite		= NULL;
 	_lostSprite		= NULL;
+	gameMenu		= NULL;
 	m_LastFrameRate = 0;
 }
 
@@ -265,11 +267,8 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 		case WM_KEYDOWN:
 			switch(wParam)
 			{
-			case VK_ESCAPE:
+			case VK_F1:
 				PostQuitMessage(0);
-				break;
-			case VK_RETURN:
-				_gameState = GameState::ONGOING;
 				break;
 			}
 			break;
@@ -308,21 +307,20 @@ bool CGameApp::BuildObjects()
 	_wonSprite = new Sprite("data/winscreen.bmp", RGB(0xff, 0x00, 0xff));
 	_lostSprite = new Sprite("data/losescreen.bmp", RGB(0xff, 0x00, 0xff));
 
-	startScreen = new Sprite("data/startscreen.bmp", RGB(0xff, 0x00, 0xff));
-	startScreen->setBackBuffer(_Buffer);
-
 	_Player1->setTeam(CPlayer::TEAM::PLAYER1);
 	_Player2->setTeam(CPlayer::TEAM::PLAYER2);
 
 	_scoreP1 = new ScoreSprite(Vec2(100, 200), _Buffer);
 	_scoreP2 = new ScoreSprite(Vec2(_screenSize.x - 140, 200.0), _Buffer);
 
+	gameMenu = new MenuSprite(Vec2(_screenSize.x / 2, _screenSize.y / 2 - 200), _Buffer);
+
 	_wonSprite->setBackBuffer(_Buffer);
 	_lostSprite->setBackBuffer(_Buffer);
 
 	addStars(20);
 	addEnemies(33);
-	setPLives(3);
+	setPLives(3, 3);
 
 	frameCounter = 0;
 
@@ -349,8 +347,6 @@ void CGameApp::SetupGameState()
 	_lostSprite->mPosition = Vec2(int(_screenSize.x / 2), int(_screenSize.y / 2));
 
 	_gameState = GameState::START;
-
-	startScreen->mPosition = Vec2(int(_screenSize.x / 2), int(_screenSize.y / 2));
 }
 
 //-----------------------------------------------------------------------------
@@ -401,9 +397,9 @@ void CGameApp::ReleaseObjects( )
 		_scoreP2 = NULL;
 	}
 
-	if (startScreen != NULL) {
-		delete startScreen;
-		startScreen = NULL;
+	if (gameMenu != NULL) {
+		delete gameMenu;
+		gameMenu = NULL;
 	}
 
 	while (!_enemies.empty()) delete _enemies.front(), _enemies.pop_front();
@@ -470,6 +466,34 @@ void CGameApp::ProcessInput()
 
 	// Retrieve keyboard state
 	if (!GetKeyboardState(pKeyBuffer)) return;
+
+	if (_gameState == GameState::START || _gameState == GameState::PAUSE) {
+		if (pKeyBuffer[VK_UP] & 0xF0 && gameMenu->frameCounter >= 20) {
+			gameMenu->opUp(_gameState);
+			gameMenu->frameCounter = 0;
+		}
+		if (pKeyBuffer[VK_DOWN] & 0xF0 && gameMenu->frameCounter >= 20) {
+			gameMenu->opDown(_gameState);
+			gameMenu->frameCounter = 0;
+		}
+		
+		if (pKeyBuffer[VK_RETURN] & 0xF0) {
+			if (gameMenu->getChoice() == 0)
+				_gameState = GameState::ONGOING;
+
+			if (gameMenu->getChoice() == 1)
+				loadGame();
+			
+			if (gameMenu->getChoice() == 2)
+				saveGame();
+		}
+	}
+
+	if (_gameState == GameState::ONGOING) {
+		if (pKeyBuffer[VK_ESCAPE] & 0xF0) {
+			_gameState = GameState::PAUSE;
+		}
+	}
 
 	// Check the relevant keys
 	// keybinds for player
@@ -590,10 +614,12 @@ void CGameApp::DrawObjects()
 		star->draw();
 	}
 
+	gameMenu->draw(_gameState);
+
 	switch (_gameState) {
 	case GameState::START:
-		startScreen->draw();
 		break;
+
 	case GameState::ONGOING:
 		_scoreP1->draw();
 		_scoreP2->draw();
@@ -632,6 +658,12 @@ void CGameApp::DrawObjects()
 		_scoreP2->draw();
 
 		_wonSprite->draw();
+		break;
+
+	case GameState::PAUSE:
+		_scoreP1->draw();
+		_scoreP2->draw();
+
 		break;
 	default:
 		break;
@@ -929,10 +961,10 @@ void CGameApp::updateGameState()
 // Name : setPLives () (Private)
 // Desc : Sets number of lives for all players and also adds the heart sprite.
 //-----------------------------------------------------------------------------
-void CGameApp::setPLives(int playerLives)
+void CGameApp::setPLives(int livesP1, int livesP2)
 {
-	_Player1->setLives(playerLives);
-	_Player2->setLives(playerLives);
+	_Player1->setLives(livesP1);
+	_Player2->setLives(livesP2);
 
 	Vec2 bluePos(30, 125);
 	Vec2 redPos(_screenSize.x - 50, 125.0);
@@ -949,23 +981,27 @@ void CGameApp::setPLives(int playerLives)
 	_livesText.second->mVelocity = Vec2(0, 0);
 	_livesText.second->setBackBuffer(_Buffer);
 
-	for (int it = 0; it != playerLives; ++it) {
+	for (int it = 0; it != livesP1; ++it) {
 		_livesBlue.push_back(new Sprite("data/heart_blue.bmp", RGB(0xff, 0x00, 0xff)));
-		_livesRed.push_back(new Sprite("data/heart_red.bmp", RGB(0xff, 0x00, 0xff)));
-
 		auto& lastBlue = _livesBlue.back();
-		auto& lastRed = _livesRed.back();
 
 		lastBlue->mPosition = bluePos;
 		lastBlue->mVelocity = Vec2(0, 0);
 		lastBlue->setBackBuffer(_Buffer);
 
+		bluePos += increment;
+	}
+
+	for (int it = 0; it != livesP2; ++it) {
+		_livesRed.push_back(new Sprite("data/heart_red.bmp", RGB(0xff, 0x00, 0xff)));
+		auto& lastRed = _livesRed.back();
+
 		lastRed->mPosition = redPos;
 		lastRed->mVelocity = Vec2(0, 0);
 		lastRed->setBackBuffer(_Buffer);
-
-		bluePos += increment;
+		
 		redPos -= increment;
+
 	}
 }
 
@@ -994,4 +1030,54 @@ void CGameApp::moveEnemies()
 			enem->Velocity() = Vec2(-20, 0);
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Name : saveGame () (Private)
+// Desc : Save current state of the game in a file.
+//-----------------------------------------------------------------------------
+void CGameApp::saveGame()
+{
+	std::ofstream save("savegame/savegame.save");
+	
+	save << _Player1->Position().x << " " << _Player1->Position().y << " " << _Player1->getLives() << " ";
+	save << _scoreP1->getScore() << "\n";
+	save << _Player2->Position().x << " " << _Player2->Position().y << " " << _Player2->getLives() << " ";
+	save << _scoreP2->getScore() << "\n";
+
+	save << _enemies.size() << "\n";
+
+	save.close();
+}
+
+//-----------------------------------------------------------------------------
+// Name : loadGame () (Private)
+// Desc : Loads previous state of the game in a file.
+//-----------------------------------------------------------------------------
+void CGameApp::loadGame()
+{
+	std::ifstream save("savegame/savegame.save");
+	while (_enemies.size()) delete _enemies.back(), _enemies.pop_back();
+	while (_bullets.size()) delete _bullets.back(), _bullets.pop_back();
+	while (_livesBlue.size()) delete _livesBlue.back(), _livesBlue.pop_back();
+	while (_livesRed.size()) delete _livesRed.back(), _livesRed.pop_back();
+
+	double cdx, cdy;
+	int livesP1, livesP2, score, noEnem;
+
+	save >> cdx >> cdy >> livesP1 >> score;
+	_Player1->Position() = Vec2(cdx, cdy);
+	_scoreP1->setScore(score);
+
+	save >> cdx >> cdy >> livesP2 >> score;
+	_Player2->Position() = Vec2(cdx, cdy);
+	_scoreP2->setScore(score);
+
+	setPLives(livesP1, livesP2);
+	
+	save >> noEnem;
+	addEnemies(noEnem);
+
+	save.close();
+	_gameState = GameState::ONGOING;
 }
