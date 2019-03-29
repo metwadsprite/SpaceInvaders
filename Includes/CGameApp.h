@@ -52,6 +52,7 @@ public:
 	bool		ShutDown();
 
 	enum GameState {
+		START,
 		ONGOING,
 		LOST,
 		WON
@@ -132,6 +133,8 @@ private:
 	ScoreSprite*				_scoreP2;			// Score for the player 2
 
 	int							frameCounter;
+
+	Sprite*						startScreen;
 };
 
 #endif // _CGAMEAPP_H_

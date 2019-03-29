@@ -37,7 +37,6 @@ CGameApp::CGameApp()
 	_wonSprite		= NULL;
 	_lostSprite		= NULL;
 	m_LastFrameRate = 0;
-	_gameState		= GameState::ONGOING;
 }
 
 //-----------------------------------------------------------------------------
@@ -270,10 +269,8 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 				PostQuitMessage(0);
 				break;
 			case VK_RETURN:
-				fTimer = SetTimer(m_hWnd, 1, 250, NULL);
-				_Player1->Explode();
-				_Player2->Explode();
-			
+				_gameState = GameState::ONGOING;
+				break;
 			}
 			break;
 
@@ -311,6 +308,9 @@ bool CGameApp::BuildObjects()
 	_wonSprite = new Sprite("data/winscreen.bmp", RGB(0xff, 0x00, 0xff));
 	_lostSprite = new Sprite("data/losescreen.bmp", RGB(0xff, 0x00, 0xff));
 
+	startScreen = new Sprite("data/startscreen.bmp", RGB(0xff, 0x00, 0xff));
+	startScreen->setBackBuffer(_Buffer);
+
 	_Player1->setTeam(CPlayer::TEAM::PLAYER1);
 	_Player2->setTeam(CPlayer::TEAM::PLAYER2);
 
@@ -347,6 +347,10 @@ void CGameApp::SetupGameState()
 
 	_wonSprite->mPosition = Vec2(int(_screenSize.x / 2), int(_screenSize.y / 2));
 	_lostSprite->mPosition = Vec2(int(_screenSize.x / 2), int(_screenSize.y / 2));
+
+	_gameState = GameState::START;
+
+	startScreen->mPosition = Vec2(int(_screenSize.x / 2), int(_screenSize.y / 2));
 }
 
 //-----------------------------------------------------------------------------
@@ -395,6 +399,11 @@ void CGameApp::ReleaseObjects( )
 	if (_scoreP2 != NULL) {
 		delete _scoreP2;
 		_scoreP2 = NULL;
+	}
+
+	if (startScreen != NULL) {
+		delete startScreen;
+		startScreen = NULL;
 	}
 
 	while (!_enemies.empty()) delete _enemies.front(), _enemies.pop_front();
@@ -517,48 +526,54 @@ void CGameApp::ProcessInput()
 //-----------------------------------------------------------------------------
 void CGameApp::AnimateObjects()
 {
-	if (!_Player1->isDead()) {
-		_Player1->Update(m_Timer.GetTimeElapsed());
-		_Player1->frameCounter()++;
-	}
-
-	holdInside(*_Player1);
-	
-	if (!_Player2->isDead()) {
-		_Player2->Update(m_Timer.GetTimeElapsed());
-		_Player2->frameCounter()++;
-	}
-
-	holdInside(*_Player2);
-
-	for (auto bul : _bullets) {
-		bul->update(m_Timer.GetTimeElapsed());
-
-		if (bul->team == CPlayer::TEAM::ENEMY) {
-			trackPlayer(*bul);
-		}
-
-		if (detectCollision(bul) || bul->mPosition.y >= _screenSize.y || bul->mPosition.y <= 0) {
-			_bullets.remove(bul);
-			break;
-		}
-	}
-
-	moveEnemies();
-
-	for (auto enem : _enemies) {
-		enem->Update(m_Timer.GetTimeElapsed());
-	}
-
-	enemyFire();
+	scrollBackground(m_Timer.GetTimeElapsed());
 	updateGameState();
 
-	if (_gameState == GameState::WON || _gameState == GameState::LOST) {
+	switch (_gameState) {
+	case GameState::ONGOING:
+		if (!_Player1->isDead()) {
+			_Player1->Update(m_Timer.GetTimeElapsed());
+			_Player1->frameCounter()++;
+		}
+		if (!_Player2->isDead()) {
+			_Player2->Update(m_Timer.GetTimeElapsed());
+			_Player2->frameCounter()++;
+		}
+
+		holdInside(*_Player1);
+		holdInside(*_Player2);
+
+		for (auto bul : _bullets) {
+			bul->update(m_Timer.GetTimeElapsed());
+
+			if (bul->team == CPlayer::TEAM::ENEMY) {
+				trackPlayer(*bul);
+			}
+			if (detectCollision(bul) || bul->mPosition.y >= _screenSize.y || bul->mPosition.y <= 0) {
+				_bullets.remove(bul);
+				break;
+			}
+		}
+
+		moveEnemies();
+
+		for (auto enem : _enemies) {
+			enem->Update(m_Timer.GetTimeElapsed());
+		}
+
+		enemyFire();
+		break;
+
+	case GameState::WON:
 		_scoreP1->move(Vec2(_screenSize.x / 2 - 150, _screenSize.y / 2 + 200));
 		_scoreP2->move(Vec2(_screenSize.x / 2 + 150, _screenSize.y / 2 + 200));
-	}
+		break;
 
-	scrollBackground(m_Timer.GetTimeElapsed());
+	case GameState::LOST:
+		_scoreP1->move(Vec2(_screenSize.x / 2 - 150, _screenSize.y / 2 + 200));
+		_scoreP2->move(Vec2(_screenSize.x / 2 + 150, _screenSize.y / 2 + 200));
+		break;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -575,10 +590,14 @@ void CGameApp::DrawObjects()
 		star->draw();
 	}
 
-	_scoreP1->draw();
-	_scoreP2->draw();
+	switch (_gameState) {
+	case GameState::START:
+		startScreen->draw();
+		break;
+	case GameState::ONGOING:
+		_scoreP1->draw();
+		_scoreP2->draw();
 
-	if (_gameState == GameState::ONGOING) {
 		if (!_Player1->isDead())
 			_Player1->Draw();
 
@@ -601,12 +620,21 @@ void CGameApp::DrawObjects()
 			enem->Draw();
 			enem->frameCounter()++;
 		}
-	}
-	else if (_gameState == GameState::WON) {
-		_wonSprite->draw();
-	}
-	else if (_gameState == GameState::LOST) {
+		break;
+	case GameState::LOST:
+		_scoreP1->draw();
+		_scoreP2->draw();
+
 		_lostSprite->draw();
+		break;
+	case GameState::WON:
+		_scoreP1->draw();
+		_scoreP2->draw();
+
+		_wonSprite->draw();
+		break;
+	default:
+		break;
 	}
 
 	_Buffer->present();
@@ -666,10 +694,10 @@ bool CGameApp::detectCollision(const Bullet* bullet)
 				return false;
 			}
 			if (bullet->team == CPlayer::TEAM::PLAYER1) {
-				_scoreP1->updateScore(10);
+				_scoreP1->updateScore(100);
 			}
 			else if (bullet->team == CPlayer::TEAM::PLAYER2) {
-				_scoreP2->updateScore(10);
+				_scoreP2->updateScore(100);
 			}
 			else {
 				return false;
