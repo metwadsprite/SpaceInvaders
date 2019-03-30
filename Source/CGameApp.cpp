@@ -703,20 +703,20 @@ void CGameApp::SpawnBullet(const Vec2 position, const Vec2 velocity, const CPlay
 //-----------------------------------------------------------------------------
 bool CGameApp::detectCollision(const Bullet* bullet)
 {
-	if (bulletUnitCollision(*bullet, *_Player1) && bullet->team == CPlayer::TEAM::ENEMY) {
+	if (bulletUnitCollision(*bullet, *_Player1) && bullet->team == CPlayer::TEAM::ENEMY && !_Player1->hasExploded()) {
 		_Player1->takeDamage();
 
-		if (_livesBlue.size())
-			_livesBlue.pop_back();
+		delete _livesBlue.back();
+		_livesBlue.pop_back();
 		
 		return true;
 	}
 	
-	if (bulletUnitCollision(*bullet, *_Player2) && bullet->team == CPlayer::TEAM::ENEMY) {
+	if (bulletUnitCollision(*bullet, *_Player2) && bullet->team == CPlayer::TEAM::ENEMY && !_Player2->hasExploded()) {
 		_Player2->takeDamage();
 
-		if (_livesRed.size())
-			_livesRed.pop_back();
+		delete _livesRed.back();
+		_livesRed.pop_back();
 		
 		return true;
 	}
