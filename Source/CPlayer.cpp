@@ -26,6 +26,8 @@ CPlayer::CPlayer(const BackBuffer *pBackBuffer, const char* texturePath)
 
 	_sprite->setBackBuffer(pBackBuffer);
 
+	_BF = pBackBuffer;
+
 	// Animation frame crop rectangle
 	RECT r;
 	r.left		= 0;
@@ -56,9 +58,79 @@ void CPlayer::Update(float dt)
 	// passive slowdown
 	if (_sprite->mVelocity.x > 0) {
 		_sprite->mVelocity.x--;
+
+		if (_team != TEAM::ENEMY) {
+			Vec2 tempPos = _sprite->mPosition;
+			Vec2 tempVel = _sprite->mVelocity;
+			int tempFC = _sprite->frameCounter;
+
+			delete _sprite;
+
+			if (_team == TEAM::PLAYER1) {
+				_sprite = new Sprite("data/ship1cw30.bmp", RGB(0xff, 0x00, 0xff));
+				_sprite->mPosition = tempPos;
+				_sprite->mVelocity = tempVel;
+				_sprite->frameCounter = tempFC;
+				_sprite->setBackBuffer(_BF);
+			}
+			else if (_team == TEAM::PLAYER2) {
+				_sprite = new Sprite("data/ship2cw30.bmp", RGB(0xff, 0x00, 0xff));
+				_sprite->mPosition = tempPos;
+				_sprite->mVelocity = tempVel;
+				_sprite->frameCounter = tempFC;
+				_sprite->setBackBuffer(_BF);
+			}
+		}
 	}
 	else if (_sprite->mVelocity.x < 0) {
 		_sprite->mVelocity.x++;
+
+		if (_team != TEAM::ENEMY) {
+			Vec2 tempPos = _sprite->mPosition;
+			Vec2 tempVel = _sprite->mVelocity;
+			int tempFC = _sprite->frameCounter;
+
+			delete _sprite;
+
+			if (_team == TEAM::PLAYER1) {
+				_sprite = new Sprite("data/ship1ccw30.bmp", RGB(0xff, 0x00, 0xff));
+				_sprite->mPosition = tempPos;
+				_sprite->mVelocity = tempVel;
+				_sprite->frameCounter = tempFC;
+				_sprite->setBackBuffer(_BF);
+			}
+			else if (_team == TEAM::PLAYER2) {
+				_sprite = new Sprite("data/ship2ccw30.bmp", RGB(0xff, 0x00, 0xff));
+				_sprite->mPosition = tempPos;
+				_sprite->mVelocity = tempVel;
+				_sprite->frameCounter = tempFC;
+				_sprite->setBackBuffer(_BF);
+			}
+		}
+	}
+	else {
+		if (_team != TEAM::ENEMY) {
+			Vec2 tempPos = _sprite->mPosition;
+			Vec2 tempVel = _sprite->mVelocity;
+			int tempFC = _sprite->frameCounter;
+
+			delete _sprite;
+
+			if (_team == TEAM::PLAYER1) {
+				_sprite = new Sprite("data/ship1.bmp", RGB(0xff, 0x00, 0xff));
+				_sprite->mPosition = tempPos;
+				_sprite->mVelocity = tempVel;
+				_sprite->frameCounter = tempFC;
+				_sprite->setBackBuffer(_BF);
+			}
+			else if (_team == TEAM::PLAYER2) {
+				_sprite = new Sprite("data/ship2.bmp", RGB(0xff, 0x00, 0xff));
+				_sprite->mPosition = tempPos;
+				_sprite->mVelocity = tempVel;
+				_sprite->frameCounter = tempFC;
+				_sprite->setBackBuffer(_BF);
+			}
+		}
 	}
 
 	if (_sprite->mVelocity.y > 0) {

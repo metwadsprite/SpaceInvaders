@@ -70,7 +70,7 @@ public:
 	virtual void draw();
 	
 protected:
-	POINT	mptFrameStartCrop;// first point of the frame (upper-left corner)
+	POINT	mptFrameStartCrop;	// first point of the frame (upper-left corner)
 	POINT	mptFrameCrop;		// crop point of frame
 	int		miFrameWidth;		// width
 	int		miFrameHeight;		// height

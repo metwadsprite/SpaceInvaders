@@ -90,6 +90,7 @@ private:
 	bool					_isDead;
 	int						_lives;
 	TEAM					_team;
+	const BackBuffer*		_BF;
 };
 
 #endif // _CPLAYER_H_

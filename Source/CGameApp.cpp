@@ -267,8 +267,9 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 		case WM_KEYDOWN:
 			switch(wParam)
 			{
-			case VK_F1:
-				PostQuitMessage(0);
+			case VK_ESCAPE:
+				if (_gameState == GameState::ONGOING) _gameState = GameState::PAUSE;
+				else PostQuitMessage(0);
 				break;
 			}
 			break;
@@ -490,7 +491,7 @@ void CGameApp::ProcessInput()
 	}
 
 	if (_gameState == GameState::ONGOING) {
-		if (pKeyBuffer[VK_ESCAPE] & 0xF0) {
+		if (pKeyBuffer[VK_PAUSE] & 0xF0) {
 			_gameState = GameState::PAUSE;
 		}
 	}
